@@ -1,0 +1,64 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Heart, ShoppingCart, User } from "lucide-react";
+
+function IconButton({ icon: Icon, label, to, badge }) {
+  const [hover, setHover] = useState(false);
+
+  return (
+    <Link
+      to={to}
+      className="relative flex items-center justify-center"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      aria-label={label}
+    >
+      <div className="relative p-2 rounded-full hover:bg-motolink-blue-light transition-colors">
+        <Icon
+          size={22}
+          strokeWidth={2}
+          className="text-motolink-blue-dark hover:text-motolink-blue transition-colors"
+        />
+        {badge > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 bg-motolink-blue text-white text-[10px] font-semibold w-4 h-4 flex items-center justify-center rounded-full">
+            {badge}
+          </span>
+        )}
+      </div>
+      <span
+        className={`absolute top-full mt-1 whitespace-nowrap text-xs font-medium bg-motolink-blue-dark text-white px-2 py-1 rounded-md transition-opacity duration-150 pointer-events-none ${
+          hover ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-motolink-blue-light">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+        {/* Logo - left side */}
+        <Link to="/" className="flex items-center gap-2 group">
+          <img
+            src="/src/assets/Logo.jpg"
+            alt="Motolink logo"
+            className="w-9 h-9 object-contain"
+          />
+          <span className="font-display font-bold text-xl tracking-wide text-motolink-blue-dark">
+            Motolink
+          </span>
+        </Link>
+
+        {/* Icons - right side */}
+        <nav className="flex items-center gap-3">
+          <IconButton icon={Heart} label="Wishlist" to="/wishlist" badge={0} />
+          <IconButton icon={ShoppingCart} label="Cart" to="/cart" badge={0} />
+          <IconButton icon={User} label="Profile" to="/login" badge={0} />
+        </nav>
+      </div>
+    </header>
+  );
+}
