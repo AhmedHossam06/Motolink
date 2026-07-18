@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ShoppingCart, User } from "lucide-react";
+import logo from "../assets/Logo.jpg";
+import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 
+// Small reusable icon button with a tooltip that appears on hover
 function IconButton({ icon: Icon, label, to, badge }) {
   const [hover, setHover] = useState(false);
 
   return (
     <Link
       to={to}
-      className="relative flex items-center justify-center"
+      className="cursor-pointer relative flex items-center justify-center"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       aria-label={label}
@@ -25,6 +30,8 @@ function IconButton({ icon: Icon, label, to, badge }) {
           </span>
         )}
       </div>
+
+      {/* Tooltip */}
       <span
         className={`absolute top-full mt-1 whitespace-nowrap text-xs font-medium bg-motolink-blue-dark text-white px-2 py-1 rounded-md transition-opacity duration-150 pointer-events-none ${
           hover ? "opacity-100" : "opacity-0"
@@ -37,13 +44,17 @@ function IconButton({ icon: Icon, label, to, badge }) {
 }
 
 export default function Navbar() {
+  const { count: cartCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
+  const { user } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-motolink-blue-light">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
         {/* Logo - left side */}
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link to="/" className="cursor-pointer flex items-center gap-2 group">
           <img
-            src="/src/assets/Logo.jpg"
+            src={logo}
             alt="Motolink logo"
             className="w-9 h-9 object-contain"
           />
@@ -54,9 +65,14 @@ export default function Navbar() {
 
         {/* Icons - right side */}
         <nav className="flex items-center gap-3">
-          <IconButton icon={Heart} label="Wishlist" to="/wishlist" badge={0} />
-          <IconButton icon={ShoppingCart} label="Cart" to="/cart" badge={0} />
-          <IconButton icon={User} label="Profile" to="/login" badge={0} />
+          <IconButton icon={Heart} label="Wishlist" to="/wishlist" badge={wishlistCount} />
+          <IconButton icon={ShoppingCart} label="Cart" to="/cart" badge={cartCount} />
+          <IconButton
+            icon={User}
+            label={user ? user.name : "Log in"}
+            to={user ? "/" : "/login"}
+            badge={0}
+          />
         </nav>
       </div>
     </header>

@@ -1,0 +1,92 @@
+// Centralized API client for the Motolink backend.
+// Every request includes credentials so the session cookie (JSESSIONID) is sent/received.
+
+const API_BASE_URL = "http://localhost:8080";
+
+class ApiError extends Error {
+  constructor(status, body) {
+    super(body?.message || "Request failed");
+    this.status = status;
+    this.body = body; // may be the {message,status,timestamp} shape OR the flat field-error map
+  }
+}
+
+async function request(path, options = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  // 204 No Content (logout) has no body to parse
+  if (res.status === 204) return null;
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new ApiError(res.status, data);
+  }
+  return data;
+}
+
+// ---------- Auth ----------
+export const signup = (name, email, password) =>
+  request("/api/auth/signup", { method: "POST", body: JSON.stringify({ name, email, password }) });
+
+export const login = (email, password) =>
+  request("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+
+export const logout = () => request("/api/auth/logout", { method: "POST" });
+
+export const getMe = () => request("/api/auth/me");
+
+// ---------- Categories ----------
+export const getCategories = () => request("/api/categories");
+export const getCategory = (id) => request(`/api/categories/${id}`);
+
+// ---------- Products ----------
+// params: { categoryId, search, page, size, sort }
+export const getProducts = (params = {}) => {
+  const query = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "")
+  ).toString();
+  return request(`/api/products${query ? `?${query}` : ""}`);
+};
+
+export const getProduct = (id) => request(`/api/products/${id}`);
+
+// ---------- Cart ----------
+export const getCart = () => request("/api/cart");
+
+export const addCartItem = (productId, quantity = 1) =>
+  request("/api/cart/items", { method: "POST", body: JSON.stringify({ productId, quantity }) });
+
+export const updateCartItem = (cartItemId, quantity) =>
+  request(`/api/cart/items/${cartItemId}`, { method: "PUT", body: JSON.stringify({ quantity }) });
+
+export const removeCartItem = (cartItemId) =>
+  request(`/api/cart/items/${cartItemId}`, { method: "DELETE" });
+
+// ---------- Wishlist ----------
+export const getWishlist = () => request("/api/wishlist");
+
+export const addWishlistItem = (productId) =>
+  request("/api/wishlist/items", { method: "POST", body: JSON.stringify({ productId }) });
+
+export const removeWishlistItem = (wishlistItemId) =>
+  request(`/api/wishlist/items/${wishlistItemId}`, { method: "DELETE" });
+
+// ---------- Orders ----------
+export const checkout = () => request("/api/orders", { method: "POST" });
+export const getOrders = () => request("/api/orders");
+export const getOrder = (id) => request(`/api/orders/${id}`);
+
+// ---------- Helpers ----------
+// Product imageUrl fields are relative paths - prefix with the backend origin to render them
+export const resolveImageUrl = (relativePath) =>
+  relativePath ? `${API_BASE_URL}${relativePath}` : null;
+
+export { ApiError, API_BASE_URL };

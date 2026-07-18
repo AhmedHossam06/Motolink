@@ -1,17 +1,38 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { loginUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: hook this up to your auth API
-    console.log("Login:", form);
+    setFieldErrors({});
+    setGeneralError("");
+    setSubmitting(true);
+    try {
+      await loginUser(form.email, form.password);
+      navigate("/");
+    } catch (err) {
+      // Validation errors come back as a flat { field: message } map.
+      // Anything else (401, 500) comes back as { message, status, timestamp }.
+      if (err.body && !err.body.message) {
+        setFieldErrors(err.body);
+      } else {
+        setGeneralError(err.body?.message || "Invalid email or password.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -41,6 +62,9 @@ export default function Login() {
                 className="w-full outline-none text-sm"
               />
             </div>
+            {fieldErrors.email && (
+              <p className="text-red-600 text-xs mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -59,13 +83,21 @@ export default function Login() {
                 className="w-full outline-none text-sm"
               />
             </div>
+            {fieldErrors.password && (
+              <p className="text-red-600 text-xs mt-1">{fieldErrors.password}</p>
+            )}
           </div>
+
+          {generalError && (
+            <p className="text-red-600 text-sm">{generalError}</p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-motolink-blue hover:bg-blue-700 transition-colors text-white font-display font-semibold py-2.5 rounded-lg mt-2"
+            disabled={submitting}
+            className="w-full bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white font-display font-semibold py-2.5 rounded-lg mt-2"
           >
-            Log in
+            {submitting ? "Logging in…" : "Log in"}
           </button>
         </form>
 

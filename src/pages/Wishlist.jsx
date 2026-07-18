@@ -1,0 +1,77 @@
+import { useEffect, useState } from "react";
+import { Trash2, ShoppingCart } from "lucide-react";
+import { useWishlist } from "../context/WishlistContext";
+import { useCart } from "../context/CartContext";
+import { resolveImageUrl } from "../api";
+
+export default function Wishlist() {
+  const { items, refreshWishlist, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    refreshWishlist().finally(() => setLoading(false));
+  }, [refreshWishlist]);
+
+  if (loading) {
+    return <main className="max-w-4xl mx-auto px-6 py-10 text-motolink-slate">Loading wishlist…</main>;
+  }
+
+  if (items.length === 0) {
+    return (
+      <main className="max-w-4xl mx-auto px-6 py-16 text-center">
+        <h1 className="font-display font-bold text-2xl text-motolink-blue-dark mb-2">
+          Your wishlist is empty
+        </h1>
+        <p className="text-motolink-slate">Tap the heart icon on any product to save it here.</p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="max-w-4xl mx-auto px-6 py-10">
+      <h1 className="font-display font-bold text-3xl text-motolink-blue-dark mb-8">Your wishlist</h1>
+
+      <div className="flex flex-col gap-4">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center gap-4 bg-white border border-motolink-blue-light rounded-xl p-4"
+          >
+            <div className="w-16 h-16 rounded-lg overflow-hidden bg-motolink-blue-light flex-shrink-0">
+              {item.product.imageUrl && (
+                <img
+                  src={resolveImageUrl(item.product.imageUrl)}
+                  alt={item.product.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+            </div>
+
+            <div className="flex-1">
+              <h3 className="font-display font-semibold text-motolink-blue-dark">
+                {item.product.name}
+              </h3>
+              <p className="text-motolink-slate text-sm">${item.product.price?.toFixed(2)}</p>
+            </div>
+
+            <button
+              onClick={() => addToCart(item.product.id, 1)}
+              className="flex items-center gap-2 bg-motolink-blue hover:bg-blue-700 transition-colors text-white text-sm font-display font-semibold px-4 py-2 rounded-lg"
+            >
+              <ShoppingCart size={16} /> Add to cart
+            </button>
+
+            <button
+              onClick={() => removeFromWishlist(item.id)}
+              aria-label="Remove from wishlist"
+              className="p-2 text-motolink-slate hover:text-red-600 transition-colors"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}

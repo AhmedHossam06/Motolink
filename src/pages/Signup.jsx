@@ -1,17 +1,36 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { signupUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: hook this up to your auth API
-    console.log("Signup:", form);
+    setFieldErrors({});
+    setGeneralError("");
+    setSubmitting(true);
+    try {
+      await signupUser(form.name, form.email, form.password);
+      navigate("/");
+    } catch (err) {
+      if (err.body && !err.body.message) {
+        setFieldErrors(err.body);
+      } else {
+        setGeneralError(err.body?.message || "Could not create your account.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -41,6 +60,9 @@ export default function Signup() {
                 className="w-full outline-none text-sm"
               />
             </div>
+            {fieldErrors.name && (
+              <p className="text-red-600 text-xs mt-1">{fieldErrors.name}</p>
+            )}
           </div>
 
           <div>
@@ -59,6 +81,9 @@ export default function Signup() {
                 className="w-full outline-none text-sm"
               />
             </div>
+            {fieldErrors.email && (
+              <p className="text-red-600 text-xs mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -77,13 +102,21 @@ export default function Signup() {
                 className="w-full outline-none text-sm"
               />
             </div>
+            {fieldErrors.password && (
+              <p className="text-red-600 text-xs mt-1">{fieldErrors.password}</p>
+            )}
           </div>
+
+          {generalError && (
+            <p className="text-red-600 text-sm">{generalError}</p>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-motolink-blue hover:bg-blue-700 transition-colors text-white font-display font-semibold py-2.5 rounded-lg mt-2"
+            disabled={submitting}
+            className="w-full bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white font-display font-semibold py-2.5 rounded-lg mt-2"
           >
-            Create account
+            {submitting ? "Creating account…" : "Create account"}
           </button>
         </form>
 
