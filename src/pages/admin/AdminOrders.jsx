@@ -4,11 +4,22 @@ import * as api from "../../api";
 
 const STATUS_STYLES = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  CONFIRMED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
   CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
-const FILTERS = ["ALL", "PENDING", "CONFIRMED", "CANCELLED"];
+const STATUS_LABELS = {
+  PENDING: "pending",
+  PAID: "confirmed",
+  CANCELLED: "cancelled",
+};
+
+const FILTERS = [
+  { value: "ALL", label: "all" },
+  { value: "PENDING", label: "pending" },
+  { value: "PAID", label: "confirmed" },
+  { value: "CANCELLED", label: "cancelled" },
+];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -48,15 +59,15 @@ export default function AdminOrders() {
       <div className="flex flex-wrap gap-2 mb-6">
         {FILTERS.map((f) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
+            key={f.value}
+            onClick={() => setFilter(f.value)}
             className={`px-3 py-1.5 text-xs font-display font-semibold uppercase tracking-wide rounded-lg border transition-colors cursor-pointer ${
-              filter === f
+              filter === f.value
                 ? "bg-motolink-blue text-white border-motolink-blue"
                 : "bg-white text-motolink-slate border-gray-200 hover:border-motolink-blue"
             }`}
           >
-            {f.toLowerCase()}
+            {f.label}
           </button>
         ))}
       </div>
@@ -82,9 +93,9 @@ export default function AdminOrders() {
                   </p>
                 </div>
                 <span
-                  className={`text-xs font-display font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border ${STATUS_STYLES[order.status]}`}
+                  className={`text-xs font-display font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border ${STATUS_STYLES[order.status] || "bg-gray-50 text-gray-700 border-gray-200"}`}
                 >
-                  {order.status.toLowerCase()}
+                  {STATUS_LABELS[order.status] || order.status.toLowerCase()}
                 </span>
               </div>
 
@@ -106,7 +117,7 @@ export default function AdminOrders() {
                   <p className="text-motolink-slate text-xs uppercase tracking-wide mb-1">Phone</p>
                   <p className="flex items-center gap-1.5 text-motolink-blue-dark">
                     <Phone size={14} className="text-motolink-slate shrink-0" />
-                    {order.userPhone || "—"}
+                    {order.phone || "—"}
                   </p>
                 </div>
                 <div>
@@ -122,13 +133,13 @@ export default function AdminOrders() {
 
               <div className="border-t border-motolink-blue-light pt-3 mb-4">
                 <ul className="space-y-1">
-                  {order.items.map((item, i) => (
-                    <li key={i} className="flex justify-between gap-3 text-sm">
+                  {order.items.map((item) => (
+                    <li key={item.id} className="flex justify-between gap-3 text-sm">
                       <span className="text-motolink-blue-dark">
-                        {item.productName} <span className="text-motolink-slate">x{item.quantity}</span>
+                        {item.product.name} <span className="text-motolink-slate">x{item.quantity}</span>
                       </span>
                       <span className="text-motolink-slate shrink-0">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ${(item.priceAtPurchase * item.quantity).toFixed(2)}
                       </span>
                     </li>
                   ))}
@@ -150,7 +161,7 @@ export default function AdminOrders() {
                       <X size={14} /> Cancel
                     </button>
                     <button
-                      onClick={() => setStatus(order.id, "CONFIRMED")}
+                      onClick={() => setStatus(order.id, "PAID")}
                       disabled={busyId === order.id}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-display font-semibold text-white bg-motolink-blue rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-default"
                     >

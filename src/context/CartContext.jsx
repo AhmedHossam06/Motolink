@@ -1,10 +1,12 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import * as api from "../api";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children, initialItems = [] }) {
   const [items, setItems] = useState(initialItems);
+  const { user } = useAuth();
 
   const refreshCart = useCallback(async () => {
     try {
@@ -12,11 +14,20 @@ export function CartProvider({ children, initialItems = [] }) {
       setItems(data || []);
       return data;
     } catch {
-      // Not logged in, or request failed - just show an empty cart rather than crash
       setItems([]);
       return [];
     }
   }, []);
+
+  // Sync cart with whoever is currently logged in - refresh on login,
+  // clear immediately on logout so stale data never lingers on screen.
+  useEffect(() => {
+    if (user) {
+      refreshCart();
+    } else {
+      setItems([]);
+    }
+  }, [user, refreshCart]);
 
   const addToCart = useCallback(async (productId, quantity = 1) => {
     await api.addCartItem(productId, quantity);

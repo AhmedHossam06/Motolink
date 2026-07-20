@@ -80,7 +80,8 @@ export const removeWishlistItem = (wishlistItemId) =>
   request(`/api/wishlist/items/${wishlistItemId}`, { method: "DELETE" });
 
 // ---------- Orders ----------
-export const checkout = () => request("/api/orders", { method: "POST" });
+export const checkout = (phone, address) =>
+  request("/api/orders", { method: "POST", body: JSON.stringify({ phone, address }) });
 export const getOrders = () => request("/api/orders");
 export const getOrder = (id) => request(`/api/orders/${id}`);
 

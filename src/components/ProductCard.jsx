@@ -6,7 +6,7 @@ import { useWishlist } from "../context/WishlistContext";
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
-  const { addToWishlist, isWishlisted } = useWishlist();
+  const { items: wishlistItems, addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
   const [cartBusy, setCartBusy] = useState(false);
   const [wishBusy, setWishBusy] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -26,13 +26,17 @@ export default function ProductCard({ product }) {
     }
   };
 
-  const handleAddToWishlist = async () => {
-    if (wishlisted) return; // already there, nothing to do
+  const handleToggleWishlist = async () => {
     setWishBusy(true);
     try {
-      await addToWishlist(product.id);
+      if (wishlisted) {
+        const existing = wishlistItems.find((item) => item.product.id === product.id);
+        if (existing) await removeFromWishlist(existing.id);
+      } else {
+        await addToWishlist(product.id);
+      }
     } catch (err) {
-      console.warn("Add to wishlist failed:", err.message);
+      console.warn("Wishlist toggle failed:", err.message);
     } finally {
       setWishBusy(false);
     }
@@ -54,9 +58,9 @@ export default function ProductCard({ product }) {
         )}
 
         <button
-          onClick={handleAddToWishlist}
+          onClick={handleToggleWishlist}
           disabled={wishBusy}
-          aria-label="Add to wishlist"
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           className="absolute top-2 right-2 p-2 rounded-full bg-white/90 hover:bg-white shadow-sm transition-colors cursor-pointer disabled:cursor-default"
         >
           <Heart

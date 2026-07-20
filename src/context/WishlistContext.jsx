@@ -1,10 +1,12 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import * as api from "../api";
+import { useAuth } from "./AuthContext";
 
 const WishlistContext = createContext(null);
 
 export function WishlistProvider({ children, initialItems = [] }) {
   const [items, setItems] = useState(initialItems);
+  const { user } = useAuth();
 
   const refreshWishlist = useCallback(async () => {
     try {
@@ -16,6 +18,14 @@ export function WishlistProvider({ children, initialItems = [] }) {
       return [];
     }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      refreshWishlist();
+    } else {
+      setItems([]);
+    }
+  }, [user, refreshWishlist]);
 
   const addToWishlist = useCallback(async (productId) => {
     await api.addWishlistItem(productId);

@@ -6,7 +6,6 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 
-// Small reusable icon button with a tooltip that appears on hover
 function IconButton({ icon: Icon, label, to, badge }) {
   const [hover, setHover] = useState(false);
 
@@ -18,11 +17,11 @@ function IconButton({ icon: Icon, label, to, badge }) {
       onMouseLeave={() => setHover(false)}
       aria-label={label}
     >
-      <div className="relative p-2 rounded-full hover:bg-motolink-blue-light transition-colors">
+      <div className="relative p-1.5 sm:p-2 rounded-full hover:bg-motolink-blue-light transition-colors">
         <Icon
-          size={22}
+          size={20}
           strokeWidth={2}
-          className="text-motolink-blue-dark hover:text-motolink-blue transition-colors"
+          className="text-motolink-blue-dark hover:text-motolink-blue transition-colors sm:w-[22px] sm:h-[22px]"
         />
         {badge > 0 && (
           <span className="absolute -top-0.5 -right-0.5 bg-motolink-blue text-white text-[10px] font-semibold w-4 h-4 flex items-center justify-center rounded-full">
@@ -31,9 +30,9 @@ function IconButton({ icon: Icon, label, to, badge }) {
         )}
       </div>
 
-      {/* Tooltip */}
+      {/* Tooltip - hidden on touch/mobile widths */}
       <span
-        className={`absolute top-full mt-1 whitespace-nowrap text-xs font-medium bg-motolink-blue-dark text-white px-2 py-1 rounded-md transition-opacity duration-150 pointer-events-none ${
+        className={`hidden sm:block absolute top-full mt-1 whitespace-nowrap text-xs font-medium bg-motolink-blue-dark text-white px-2 py-1 rounded-md transition-opacity duration-150 pointer-events-none ${
           hover ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -50,9 +49,9 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-motolink-blue-light">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-3 sm:px-6 py-3 gap-2">
         {/* Logo - left side */}
-        <Link to="/" className="cursor-pointer flex items-center gap-2 group">
+        <Link to="/" className="cursor-pointer flex items-center gap-2 group shrink-0">
           <img
             src={logo}
             alt="Motolink logo"
@@ -64,7 +63,7 @@ export default function Navbar() {
         </Link>
 
         {/* Icons - right side */}
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-0.5 sm:gap-3 shrink-0">
           <IconButton icon={Heart} label="Wishlist" to="/wishlist" badge={wishlistCount} />
           <IconButton icon={ShoppingCart} label="Cart" to="/cart" badge={cartCount} />
 

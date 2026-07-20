@@ -31,18 +31,18 @@ export default function Profile() {
   if (!user) return null; // redirecting
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-10">
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* User info */}
-      <div className="flex items-center justify-between bg-white border border-motolink-blue-light rounded-xl p-6 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-motolink-blue-light rounded-xl p-5 sm:p-6 mb-8">
         <div>
-          <h1 className="font-display font-bold text-2xl text-motolink-blue-dark">
+          <h1 className="font-display font-bold text-xl sm:text-2xl text-motolink-blue-dark break-words">
             {user.name}
           </h1>
-          <p className="text-motolink-slate text-sm">{user.email}</p>
+          <p className="text-motolink-slate text-sm break-all">{user.email}</p>
         </div>
         <button
           onClick={handleLogout}
-          className="cursor-pointer flex items-center gap-2 text-red-600 hover:text-red-700 font-display font-semibold text-sm border border-red-200 hover:bg-red-50 transition-colors px-4 py-2 rounded-lg"
+          className="cursor-pointer flex items-center justify-center gap-2 text-red-600 hover:text-red-700 font-display font-semibold text-sm border border-red-200 hover:bg-red-50 transition-colors px-4 py-2 rounded-lg w-full sm:w-auto"
         >
           <LogOut size={16} /> Log out
         </button>
@@ -62,7 +62,7 @@ export default function Profile() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className="bg-white border border-motolink-blue-light rounded-xl p-5"
+              className="bg-white border border-motolink-blue-light rounded-xl p-4 sm:p-5"
             >
               <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
                 <div className="flex items-center gap-2">

@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import CheckoutModal from "../components/CheckoutModal";
 import * as api from "../api";
 
 export default function Cart() {
   const { items, refreshCart, updateQuantity, removeFromCart } = useCart();
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -17,13 +19,14 @@ export default function Cart() {
 
   const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (phone, address) => {
     setError("");
     setCheckingOut(true);
     try {
-      await api.checkout();
+      await api.checkout(phone, address);
       await refreshCart();
-      navigate("/");
+      setShowModal(false);
+      navigate("/profile");
     } catch (err) {
       setError(err.body?.message || "Checkout failed. Please try again.");
     } finally {
@@ -91,15 +94,22 @@ export default function Cart() {
           Total: ${total.toFixed(2)}
         </span>
         <button
-          onClick={handleCheckout}
-          disabled={checkingOut}
-          className="bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white font-display font-semibold px-6 py-3 rounded-lg"
+          onClick={() => setShowModal(true)}
+          className="bg-motolink-blue hover:bg-blue-700 transition-colors text-white font-display font-semibold px-6 py-3 rounded-lg cursor-pointer"
         >
-          {checkingOut ? "Placing order…" : "Checkout"}
+          Checkout
         </button>
       </div>
 
       {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+
+      {showModal && (
+        <CheckoutModal
+          onConfirm={handleCheckout}
+          onClose={() => setShowModal(false)}
+          submitting={checkingOut}
+        />
+      )}
     </main>
   );
 }

@@ -7,6 +7,8 @@ import CategoryProducts from "./pages/CategoryProducts";
 import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { homeLoader, categoryLoader } from "./loaders";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
@@ -30,7 +32,11 @@ const router = createBrowserRouter(
         { path: "wishlist", element: <Wishlist /> },
         {
           path: "admin",
-          element: <AdminLayout />,
+          element: (
+            <ProtectedRoute role="ADMIN">
+              <AdminLayout />
+            </ProtectedRoute>
+          ),
           children: [
             { index: true, element: <Navigate to="orders" replace /> },
             { path: "orders", element: <AdminOrders /> },
@@ -39,6 +45,7 @@ const router = createBrowserRouter(
           ],
         },
         { path: "profile", element: <Profile /> },
+        { path: "*", element: <NotFound /> },
       ],
     },
   ],
