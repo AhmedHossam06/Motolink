@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingCart, User } from "lucide-react";
+import { Heart, ShoppingCart, User, LayoutDashboard } from "lucide-react";
 import logo from "../assets/Logo.jpg";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -67,10 +67,15 @@ export default function Navbar() {
         <nav className="flex items-center gap-3">
           <IconButton icon={Heart} label="Wishlist" to="/wishlist" badge={wishlistCount} />
           <IconButton icon={ShoppingCart} label="Cart" to="/cart" badge={cartCount} />
+
+          {user?.role === "ADMIN" && (
+            <IconButton icon={LayoutDashboard} label="Admin" to="/admin/orders" badge={0} />
+          )}
+
           <IconButton
             icon={User}
             label={user ? user.name : "Log in"}
-            to={user ? "/" : "/login"}
+            to={user ? "/profile" : "/login"}
             badge={0}
           />
         </nav>

@@ -90,3 +90,17 @@ export const resolveImageUrl = (relativePath) =>
   relativePath ? `${API_BASE_URL}${relativePath}` : null;
 
 export { ApiError, API_BASE_URL };
+// ---------- Admin ----------
+// Append these to the existing src/api.js (below the "Orders" section).
+// Backend endpoints assumed: GET /api/admin/orders, PATCH /api/admin/orders/:id/status,
+// GET /api/admin/users. Ask the backend teammate to add these (see checklist already shared).
+ 
+export const getAdminOrders = () => request("/api/admin/orders");
+ 
+export const updateOrderStatus = (orderId, status) =>
+  request(`/api/admin/orders/${orderId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+ 
+export const getAdminUsers = () => request("/api/admin/users");

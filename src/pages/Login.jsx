@@ -20,8 +20,8 @@ export default function Login() {
     setGeneralError("");
     setSubmitting(true);
     try {
-      await loginUser(form.email, form.password);
-      navigate("/");
+      const loggedInUser = await loginUser(form.email, form.password);
+navigate(loggedInUser.role === "ADMIN" ? "/admin/orders" : "/");
     } catch (err) {
       // Validation errors come back as a flat { field: message } map.
       // Anything else (401, 500) comes back as { message, status, timestamp }.
