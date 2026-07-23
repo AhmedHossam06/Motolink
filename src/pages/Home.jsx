@@ -14,6 +14,7 @@ import {
   Droplet,
   Sparkles,
   Tag,
+  Heart,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import * as api from "../api";
 import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useWishlist } from "../context/WishlistContext";
 
 // Maps the "icon" string returned by the backend to an actual lucide-react icon.
 // Falls back to a generic package icon for any name we don't recognize yet.
@@ -52,8 +54,38 @@ const RIDE_SMARTER_TIPS = [
   },
 ];
 
+const SLIDE_SIZE = 4;
+
 function ProductCard({ product, onQuickAdd, busy }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { items: wishlistItems, isWishlisted, addToWishlist, removeFromWishlist } = useWishlist();
+  const [wishBusy, setWishBusy] = useState(false);
+
   const onSale = product.onSale && product.salePrice != null;
+  const wishlisted = isWishlisted(product.id);
+
+  const handleToggleWishlist = async (e) => {
+    e.preventDefault(); // don't follow the card's link when tapping the heart
+    e.stopPropagation();
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    setWishBusy(true);
+    try {
+      if (wishlisted) {
+        const existing = wishlistItems.find((item) => item.product.id === product.id);
+        if (existing) await removeFromWishlist(existing.id);
+      } else {
+        await addToWishlist(product.id);
+      }
+    } finally {
+      setWishBusy(false);
+    }
+  };
 
   return (
     <div className="relative bg-white border border-motolink-blue-light rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col">
@@ -62,6 +94,18 @@ function ProductCard({ product, onQuickAdd, busy }) {
           Sale
         </span>
       )}
+
+      <button
+        onClick={handleToggleWishlist}
+        disabled={wishBusy}
+        aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/90 hover:bg-white shadow-sm transition-colors cursor-pointer disabled:cursor-default"
+      >
+        <Heart
+          size={16}
+          className={wishlisted ? "fill-motolink-blue text-motolink-blue" : "text-motolink-slate"}
+        />
+      </button>
 
       <Link to={`/product/${product.id}`} className="block aspect-square bg-motolink-blue-light/40">
         {product.imageUrl && (
@@ -109,76 +153,83 @@ function ProductCard({ product, onQuickAdd, busy }) {
   );
 }
 
-// Paginated product slider: shows exactly 4 products at a time (2x2 on mobile).
-// Clicking the arrows moves a full "page" at once instead of free scrolling.
-function ProductSlider({ products, onQuickAdd, busyProductId }) {
-  const [page, setPage] = useState(0);
-  const perPage = 4;
-  const totalPages = Math.ceil(products.length / perPage);
+// Slides through `products` four at a time, with a sliding (translate) transition
+// and left/right arrows that wrap around at the ends.
+function FeaturedGearSlider({ products, onQuickAdd, busyProductId }) {
+  const [slide, setSlide] = useState(0);
+  const totalSlides = Math.ceil(products.length / SLIDE_SIZE);
 
-  const goPrev = () => setPage((p) => Math.max(p - 1, 0));
-  const goNext = () => setPage((p) => Math.min(p + 1, totalPages - 1));
+  useEffect(() => {
+    // Clamp back to a valid slide if the product list shrinks
+    if (slide >= totalSlides) setSlide(0);
+  }, [totalSlides, slide]);
+
+  if (products.length === 0) return null;
+
+  const goPrev = () => setSlide((s) => (s - 1 + totalSlides) % totalSlides);
+  const goNext = () => setSlide((s) => (s + 1) % totalSlides);
+
+  const groups = [];
+  for (let i = 0; i < products.length; i += SLIDE_SIZE) {
+    groups.push(products.slice(i, i + SLIDE_SIZE));
+  }
 
   return (
-    <div className="relative">
+    <div>
       <div className="overflow-hidden">
         <div
-          className="flex items-start transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${page * 100}%)` }}
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${slide * 100}%)` }}
         >
-          {Array.from({ length: totalPages }).map((_, pageIndex) => (
+          {groups.map((group, i) => (
             <div
-              key={pageIndex}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5 w-full shrink-0"
+              key={i}
+              className="min-w-full grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 items-start"
             >
-              {products
-                .slice(pageIndex * perPage, pageIndex * perPage + perPage)
-                .map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    busy={busyProductId === product.id}
-                    onQuickAdd={onQuickAdd}
-                  />
-                ))}
+              {group.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  busy={busyProductId === product.id}
+                  onQuickAdd={onQuickAdd}
+                />
+              ))}
             </div>
           ))}
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <>
+      {totalSlides > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-6">
           <button
             onClick={goPrev}
-            disabled={page === 0}
             aria-label="Previous products"
-            className="cursor-pointer disabled:cursor-default disabled:opacity-30 absolute -left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 rounded-full bg-white border border-motolink-blue-light shadow-md hover:bg-motolink-blue-light transition-colors"
+            className="p-2 rounded-full border border-motolink-blue-light text-motolink-blue-dark hover:bg-motolink-blue-light transition-colors cursor-pointer"
           >
-            <ChevronLeft size={18} className="text-motolink-blue-dark" />
-          </button>
-          <button
-            onClick={goNext}
-            disabled={page === totalPages - 1}
-            aria-label="Next products"
-            className="cursor-pointer disabled:cursor-default disabled:opacity-30 absolute -right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 rounded-full bg-white border border-motolink-blue-light shadow-md hover:bg-motolink-blue-light transition-colors"
-          >
-            <ChevronRight size={18} className="text-motolink-blue-dark" />
+            <ChevronLeft size={18} />
           </button>
 
-          {/* Page dots */}
-          <div className="flex justify-center gap-1.5 mt-4">
-            {Array.from({ length: totalPages }).map((_, i) => (
+          <div className="flex items-center gap-1.5">
+            {groups.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setPage(i)}
-                aria-label={`Go to page ${i + 1}`}
-                className={`cursor-pointer w-2 h-2 rounded-full transition-colors ${
-                  i === page ? "bg-motolink-blue" : "bg-motolink-blue-light"
+                onClick={() => setSlide(i)}
+                aria-label={`Go to slide ${i + 1}`}
+                className={`h-2 rounded-full transition-all cursor-pointer ${
+                  i === slide ? "w-5 bg-motolink-blue" : "w-2 bg-motolink-blue-light"
                 }`}
               />
             ))}
           </div>
-        </>
+
+          <button
+            onClick={goNext}
+            aria-label="Next products"
+            className="p-2 rounded-full border border-motolink-blue-light text-motolink-blue-dark hover:bg-motolink-blue-light transition-colors cursor-pointer"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -198,7 +249,7 @@ export default function Home() {
   // avoids hitting the backend three separate times for the same data.
   useEffect(() => {
     api
-      .getProducts({ size: 100 })
+      .getProducts({ size: 50 })
       .then((data) => {
         const list = Array.isArray(data) ? data : data?.content || [];
         setAllProducts(list);
@@ -207,12 +258,13 @@ export default function Home() {
       .finally(() => setProductsLoading(false));
   }, []);
 
-  // Featured now shows every product that came back, paginated 4 at a time by the slider
-  const featured = allProducts;
-  // Deals now shows products the admin actually put on sale, not a random slice
+  // Featured now pulls from the whole product list so the slider has more than one page to show
+  const featuredPool = allProducts;
+  // Deals shows products the admin actually put on sale, not a random slice
   const deals = allProducts.filter((p) => p.onSale).slice(0, 8);
 
   // Real brands pulled from the products themselves, not hardcoded
+  // (kept in case the Top Brands section below gets re-enabled)
   const brands = [...new Set(allProducts.map((p) => p.brand).filter(Boolean))].slice(0, 6);
 
   const scrollToCategories = () => {
@@ -301,7 +353,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* Featured Gear - now a horizontal slider */}
+      {/* Featured Gear - sliding carousel, 4 products per slide */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-end justify-between mb-6">
           <h2 className="font-display font-bold text-2xl text-motolink-blue-dark">
@@ -317,13 +369,13 @@ export default function Home() {
 
         {productsLoading ? (
           <p className="text-motolink-slate text-sm">Loading featured products…</p>
-        ) : featured.length === 0 ? (
+        ) : featuredPool.length === 0 ? (
           <p className="text-motolink-slate text-sm">Featured products will show up here soon.</p>
         ) : (
-          <ProductSlider
-            products={featured}
-            busyProductId={busyProductId}
+          <FeaturedGearSlider
+            products={featuredPool}
             onQuickAdd={handleQuickAdd}
+            busyProductId={busyProductId}
           />
         )}
       </section>
@@ -337,15 +389,20 @@ export default function Home() {
               Deals
             </h2>
           </div>
-          <ProductSlider
-            products={deals}
-            busyProductId={busyProductId}
-            onQuickAdd={handleQuickAdd}
-          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 items-start">
+            {deals.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                busy={busyProductId === product.id}
+                onQuickAdd={handleQuickAdd}
+              />
+            ))}
+          </div>
         </section>
       )}
 
-      {/* Top Brands - pulled from actual product data, not hardcoded */}
+      {/* Top Brands - pulled from actual product data, not hardcoded
       {!productsLoading && brands.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 py-12">
           <h2 className="font-display font-bold text-2xl text-motolink-blue-dark mb-6">
@@ -364,7 +421,7 @@ export default function Home() {
             ))}
           </div>
         </section>
-      )}
+      )} */}
 
       {/* Why choose Motolink */}
       <section className="max-w-7xl mx-auto px-6 py-14">

@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, ArrowLeft } from "lucide-react";
 import * as api from "../api";
 import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 export default function AllProducts() {
   const [products, setProducts] = useState([]);
@@ -67,43 +66,68 @@ export default function AllProducts() {
         <p className="text-motolink-slate text-center py-16">No products available right now.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="bg-white border border-motolink-blue-light rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
-            >
-              <Link to={`/product/${product.id}`} className="block aspect-square bg-motolink-blue-light/40">
-                {product.imageUrl && (
-                  <img
-                    src={resolveImageUrl(product.imageUrl)}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+          {products.map((product) => {
+            const onSale = product.onSale && product.salePrice != null;
+
+            return (
+              <div
+                key={product.id}
+                className="relative bg-white border border-motolink-blue-light rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
+              >
+                {onSale && (
+                  <span className="absolute top-2 left-2 z-10 bg-red-600 text-white text-[11px] font-display font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                    Sale
+                  </span>
                 )}
-              </Link>
-              <div className="p-3 sm:p-4 flex flex-col flex-1">
-                <Link to={`/product/${product.id}`}>
-                  <h3 className="font-display font-semibold text-sm sm:text-base text-motolink-blue-dark line-clamp-2 mb-1">
-                    {product.name}
-                  </h3>
+
+                <Link to={`/product/${product.id}`} className="block aspect-square bg-motolink-blue-light/40">
+                  {product.imageUrl && (
+                    <img
+                      src={resolveImageUrl(product.imageUrl)}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </Link>
-                {product.brand && (
-                  <p className="text-motolink-slate text-xs mb-1">{product.brand}</p>
-                )}
-                <p className="font-display font-bold text-motolink-blue-dark text-sm sm:text-base mt-auto mb-3">
-                  {formatPrice(product.price)}
-                </p>
-                <button
-                  onClick={() => handleQuickAdd(product.id)}
-                  disabled={busyProductId === product.id}
-                  className="w-full flex items-center justify-center gap-1.5 bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white text-xs sm:text-sm font-display font-semibold py-2 rounded-lg cursor-pointer disabled:cursor-default"
-                >
-                  <ShoppingCart size={14} />
-                  {busyProductId === product.id ? "Adding…" : "Add to cart"}
-                </button>
+                <div className="p-3 sm:p-4 flex flex-col flex-1">
+                  <Link to={`/product/${product.id}`}>
+                    <h3 className="font-display font-semibold text-sm sm:text-base text-motolink-blue-dark line-clamp-2 mb-1">
+                      {product.name}
+                    </h3>
+                  </Link>
+                  {product.brand && (
+                    <p className="text-motolink-slate text-xs mb-1">{product.brand}</p>
+                  )}
+
+                  <div className="mt-auto mb-3">
+                    {onSale ? (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-display font-bold text-red-600 text-sm sm:text-base">
+                          {formatPrice(product.salePrice)}
+                        </span>
+                        <span className="text-motolink-slate text-xs sm:text-sm line-through">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="font-display font-bold text-motolink-blue-dark text-sm sm:text-base">
+                        {formatPrice(product.price)}
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => handleQuickAdd(product.id)}
+                    disabled={busyProductId === product.id}
+                    className="w-full flex items-center justify-center gap-1.5 bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white text-xs sm:text-sm font-display font-semibold py-2 rounded-lg cursor-pointer disabled:cursor-default"
+                  >
+                    <ShoppingCart size={14} />
+                    {busyProductId === product.id ? "Adding…" : "Add to cart"}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>

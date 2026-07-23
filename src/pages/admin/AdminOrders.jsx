@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
-import { Mail, Phone, MapPin, Check, X } from "lucide-react";
+import { Mail, Phone, MapPin, Truck, X } from "lucide-react";
 import * as api from "../../api";
 import { formatPrice } from "../../api";
 
 const STATUS_STYLES = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-  PAID: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  SHIPPED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
 const STATUS_LABELS = {
-  PENDING: "pending",
-  PAID: "confirmed",
+  PENDING: "order placed",
+  SHIPPED: "shipped",
   CANCELLED: "cancelled",
 };
 
 const FILTERS = [
   { value: "ALL", label: "all" },
-  { value: "PENDING", label: "pending" },
-  { value: "PAID", label: "confirmed" },
+  { value: "PENDING", label: "order placed" },
+  { value: "SHIPPED", label: "shipped" },
   { value: "CANCELLED", label: "cancelled" },
 ];
 
@@ -190,11 +190,11 @@ export default function AdminOrders() {
                       <X size={14} /> Cancel
                     </button>
                     <button
-                      onClick={() => setStatus(order.id, "PAID")}
+                      onClick={() => setStatus(order.id, "SHIPPED")}
                       disabled={busyId === order.id}
                       className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-display font-semibold text-white bg-motolink-blue rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors cursor-pointer disabled:cursor-default"
                     >
-                      <Check size={14} /> Confirm
+                      <Truck size={14} /> Ship
                     </button>
                   </div>
                 ) : (

@@ -5,6 +5,18 @@ import { useAuth } from "../context/AuthContext";
 import * as api from "../api";
 import { formatPrice } from "../api";
 
+const STATUS_LABELS = {
+  PENDING: "Order placed",
+  SHIPPED: "Shipped",
+  CANCELLED: "Cancelled",
+};
+
+const STATUS_STYLES = {
+  PENDING: "bg-amber-50 text-amber-700",
+  SHIPPED: "bg-emerald-50 text-emerald-700",
+  CANCELLED: "bg-red-50 text-red-700",
+};
+
 export default function Profile() {
   const { user, logoutUser, updateProfile } = useAuth();
   const navigate = useNavigate();
@@ -204,8 +216,12 @@ export default function Profile() {
                     Order #{order.id}
                   </span>
                 </div>
-                <span className="text-xs font-semibold uppercase tracking-wide px-2 py-1 rounded-full bg-motolink-blue-light text-motolink-blue">
-                  {order.status}
+                <span
+                  className={`text-xs font-semibold uppercase tracking-wide px-2 py-1 rounded-full ${
+                    STATUS_STYLES[order.status] || "bg-motolink-blue-light text-motolink-blue"
+                  }`}
+                >
+                  {STATUS_LABELS[order.status] || order.status}
                 </span>
               </div>
 
