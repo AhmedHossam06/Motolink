@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet, useNavigation } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "../context/AuthContext";
+import Footer from "./Footer";
 
 // Checks whether a session cookie from a previous visit is still valid,
 // so a page refresh doesn't silently log the user out on the frontend
@@ -26,6 +27,7 @@ export default function Layout() {
       )}
       <Navbar />
       <Outlet />
+      <Footer />
     </>
   );
 }

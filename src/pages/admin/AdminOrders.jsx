@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Check, X } from "lucide-react";
 import * as api from "../../api";
+import { formatPrice } from "../../api";
 
 const STATUS_STYLES = {
   PENDING: "bg-amber-50 text-amber-700 border-amber-200",
@@ -20,6 +21,32 @@ const FILTERS = [
   { value: "PAID", label: "confirmed" },
   { value: "CANCELLED", label: "cancelled" },
 ];
+
+// Returns something like "2 hours ago", "3 days ago", "Just now"
+function timeAgo(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (seconds < 60) return "Just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
+
+  const years = Math.floor(months / 12);
+  return `${years} year${years === 1 ? "" : "s"} ago`;
+}
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -90,6 +117,8 @@ export default function AdminOrders() {
                   </h3>
                   <p className="text-motolink-slate text-xs mt-0.5">
                     {new Date(order.createdAt).toLocaleDateString()}
+                    {" · "}
+                    {timeAgo(order.createdAt)}
                   </p>
                 </div>
                 <span
@@ -139,7 +168,7 @@ export default function AdminOrders() {
                         {item.product.name} <span className="text-motolink-slate">x{item.quantity}</span>
                       </span>
                       <span className="text-motolink-slate shrink-0">
-                        ${(item.priceAtPurchase * item.quantity).toFixed(2)}
+                        {formatPrice(item.priceAtPurchase * item.quantity)}
                       </span>
                     </li>
                   ))}
@@ -148,7 +177,7 @@ export default function AdminOrders() {
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <p className="font-display font-bold text-lg text-motolink-blue-dark">
-                  ${order.totalAmount.toFixed(2)}
+                  {formatPrice(order.totalAmount)}
                 </p>
 
                 {order.status === "PENDING" ? (

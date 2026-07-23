@@ -17,6 +17,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AllProducts from "./pages/AllProducts";
 
 const router = createBrowserRouter(
   [
@@ -28,6 +29,7 @@ const router = createBrowserRouter(
         { path: "login", element: <Login /> },
         { path: "signup", element: <Signup /> },
         { path: "category/:categoryId", element: <CategoryProducts />, loader: categoryLoader },
+        { path: "products", element: <AllProducts /> },
         { path: "cart", element: <Cart /> },
         { path: "wishlist", element: <Wishlist /> },
         {

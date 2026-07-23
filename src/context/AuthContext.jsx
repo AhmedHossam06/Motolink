@@ -14,7 +14,6 @@ export function AuthProvider({ children, initialUser = null }) {
 
   const signupUser = useCallback(async (name, email, password) => {
     const result = await api.signup(name, email, password);
-    // signup does not log the user in automatically on the backend, so log in right after
     return loginUser(email, password);
   }, [loginUser]);
 
@@ -34,8 +33,16 @@ export function AuthProvider({ children, initialUser = null }) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (name, currentPassword, newPassword) => {
+    const result = await api.updateProfile(name, currentPassword, newPassword);
+    setUser(result);
+    return result;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loginUser, signupUser, logoutUser, refreshUser }}>
+    <AuthContext.Provider
+      value={{ user, loginUser, signupUser, logoutUser, refreshUser, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

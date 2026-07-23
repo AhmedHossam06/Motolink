@@ -87,6 +87,7 @@ export const getOrder = (id) => request(`/api/orders/${id}`);
 
 // ---------- Helpers ----------
 // Product imageUrl fields are relative paths - prefix with the backend origin to render them
+export const formatPrice = (amount) => `${Number(amount).toFixed(2)} EGP`;
 export const resolveImageUrl = (relativePath) =>
   relativePath ? `${API_BASE_URL}${relativePath}` : null;
 
@@ -105,3 +106,57 @@ export const updateOrderStatus = (orderId, status) =>
   });
  
 export const getAdminUsers = () => request("/api/admin/users");
+// ---------- Admin: Product CRUD (multipart/form-data) ----------
+// Separate from the generic `request()` helper because these send FormData,
+// not JSON - the browser must set its own multipart Content-Type boundary.
+async function requestMultipart(path, options = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    credentials: "include",
+    ...options,
+  });
+
+  if (res.status === 204) return null;
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new ApiError(res.status, data);
+  }
+  return data;
+}
+
+// productData: { name, description, price, brand, categoryId, stockQuantity }
+export const createProduct = (productData, imageFile) => {
+  const formData = new FormData();
+  formData.append(
+    "product",
+    new Blob([JSON.stringify(productData)], { type: "application/json" })
+  );
+  if (imageFile) formData.append("image", imageFile);
+  return requestMultipart("/api/products", { method: "POST", body: formData });
+};
+
+export const updateProduct = (id, productData, imageFile) => {
+  const formData = new FormData();
+  formData.append(
+    "product",
+    new Blob([JSON.stringify(productData)], { type: "application/json" })
+  );
+  if (imageFile) formData.append("image", imageFile);
+  return requestMultipart(`/api/products/${id}`, { method: "PUT", body: formData });
+};
+
+export const deleteProduct = (id) => request(`/api/products/${id}`, { method: "DELETE" });
+export const updateUserRole = (userId, role) =>
+  request(`/api/admin/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+
+export const deleteUser = (userId) =>
+  request(`/api/admin/users/${userId}`, { method: "DELETE" });
+export const updateProfile = (name, currentPassword, newPassword) =>
+  request("/api/auth/me", {
+    method: "PUT",
+    body: JSON.stringify({ name, currentPassword, newPassword }),
+  });

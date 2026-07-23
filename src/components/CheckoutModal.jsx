@@ -4,13 +4,22 @@ import { X } from "lucide-react";
 export default function CheckoutModal({ onConfirm, onClose, submitting }) {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [touched, setTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
+  const [addressTouched, setAddressTouched] = useState(false);
 
-  const valid = phone.trim() !== "" && address.trim() !== "";
+  const phoneValid = /^01[0125][0-9]{8}$/.test(phone);
+  const valid = phoneValid && address.trim() !== "";
+
+  const handlePhoneChange = (e) => {
+    // Strip anything that isn't a digit as the user types, cap at 11 digits
+    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 11);
+    setPhone(digitsOnly);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setTouched(true);
+    setPhoneTouched(true);
+    setAddressTouched(true);
     if (!valid) return;
     onConfirm(phone.trim(), address.trim());
   };
@@ -40,13 +49,21 @@ export default function CheckoutModal({ onConfirm, onClose, submitting }) {
             </label>
             <input
               type="tel"
+              inputMode="numeric"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={handlePhoneChange}
+              onBlur={() => setPhoneTouched(true)}
               placeholder="e.g. 01012345678"
+              maxLength={11}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-motolink-blue"
             />
-            {touched && phone.trim() === "" && (
+            {phoneTouched && phone.trim() === "" && (
               <p className="text-red-600 text-xs mt-1">Phone number is required.</p>
+            )}
+            {phoneTouched && phone.trim() !== "" && !phoneValid && (
+              <p className="text-red-600 text-xs mt-1">
+                Enter a valid Egyptian phone number (e.g. 01012345678).
+              </p>
             )}
           </div>
 
@@ -57,11 +74,12 @@ export default function CheckoutModal({ onConfirm, onClose, submitting }) {
             <textarea
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              onBlur={() => setAddressTouched(true)}
               placeholder="Street, building, city…"
               rows={3}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-motolink-blue"
             />
-            {touched && address.trim() === "" && (
+            {addressTouched && address.trim() === "" && (
               <p className="text-red-600 text-xs mt-1">Address is required.</p>
             )}
           </div>

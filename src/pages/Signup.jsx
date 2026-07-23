@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User, Mail, Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -8,8 +8,14 @@ export default function Signup() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { signupUser } = useAuth();
+  const { signupUser, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,7 +27,7 @@ export default function Signup() {
     setSubmitting(true);
     try {
       await signupUser(form.name, form.email, form.password);
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err) {
       if (err.body && !err.body.message) {
         setFieldErrors(err.body);

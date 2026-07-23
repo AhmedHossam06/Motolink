@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -8,8 +8,14 @@ export default function Login() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { loginUser } = useAuth();
+  const { loginUser, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === "ADMIN" ? "/admin/orders" : "/", { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -21,7 +27,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       const loggedInUser = await loginUser(form.email, form.password);
-navigate(loggedInUser.role === "ADMIN" ? "/admin/orders" : "/");
+      navigate(loggedInUser.role === "ADMIN" ? "/admin/orders" : "/", { replace: true });
     } catch (err) {
       // Validation errors come back as a flat { field: message } map.
       // Anything else (401, 500) comes back as { message, status, timestamp }.

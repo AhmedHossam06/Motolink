@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
-import { resolveImageUrl } from "../api";
+import { resolveImageUrl, formatPrice } from "../api";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 
@@ -78,7 +78,7 @@ export default function ProductCard({ product }) {
           {product.name}
         </h3>
         <p className="font-display font-bold text-motolink-blue mt-auto pt-2">
-          ${product.price.toFixed(2)}
+          {formatPrice(product.price)}
         </p>
 
         <button
