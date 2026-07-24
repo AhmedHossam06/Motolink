@@ -28,7 +28,7 @@ export default function Cart() {
 
   const total = items.reduce(
     (sum, item) => sum + getEffectivePrice(item.product) * item.quantity,
-    0
+    0,
   );
 
   const handleQuantityChange = async (item, delta) => {
@@ -58,7 +58,11 @@ export default function Cart() {
   };
 
   if (loading) {
-    return <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-motolink-slate">Loading cart…</main>;
+    return (
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 text-motolink-slate">
+        Loading cart…
+      </main>
+    );
   }
 
   if (items.length === 0) {
@@ -67,7 +71,9 @@ export default function Cart() {
         <h1 className="font-display font-bold text-2xl text-motolink-blue-dark mb-2">
           Your cart is empty
         </h1>
-        <p className="text-motolink-slate">Browse the catalog and add something you like.</p>
+        <p className="text-motolink-slate">
+          Browse the catalog and add something you like.
+        </p>
       </main>
     );
   }
@@ -94,14 +100,17 @@ export default function Cart() {
                 </h3>
                 {onSale ? (
                   <p className="text-sm">
-                    <span className="text-red-600 font-medium">{formatPrice(unitPrice)}</span>{" "}
+                    <span className="text-red-600 font-medium">
+                      {formatPrice(unitPrice)}
+                    </span>{" "}
                     <span className="text-motolink-slate line-through">
                       {formatPrice(item.product.price)}
                     </span>{" "}
-                    <span className="text-motolink-slate">each</span>
                   </p>
                 ) : (
-                  <p className="text-motolink-slate text-sm">{formatPrice(unitPrice)} each</p>
+                  <p className="text-motolink-slate text-sm">
+                    {formatPrice(unitPrice)}
+                  </p>
                 )}
               </div>
 
@@ -115,7 +124,9 @@ export default function Cart() {
                   >
                     <Minus size={14} />
                   </button>
-                  <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                  <span className="w-8 text-center text-sm font-medium">
+                    {item.quantity}
+                  </span>
                   <button
                     onClick={() => handleQuantityChange(item, 1)}
                     disabled={busyId === item.id}

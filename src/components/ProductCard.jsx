@@ -6,12 +6,18 @@ import { useWishlist } from "../context/WishlistContext";
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
-  const { items: wishlistItems, addToWishlist, removeFromWishlist, isWishlisted } = useWishlist();
+  const {
+    items: wishlistItems,
+    addToWishlist,
+    removeFromWishlist,
+    isWishlisted,
+  } = useWishlist();
   const [cartBusy, setCartBusy] = useState(false);
   const [wishBusy, setWishBusy] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
   const wishlisted = isWishlisted(product.id);
+  const onSale = product.onSale && product.salePrice != null;
 
   const handleAddToCart = async () => {
     setCartBusy(true);
@@ -30,7 +36,9 @@ export default function ProductCard({ product }) {
     setWishBusy(true);
     try {
       if (wishlisted) {
-        const existing = wishlistItems.find((item) => item.product.id === product.id);
+        const existing = wishlistItems.find(
+          (item) => item.product.id === product.id,
+        );
         if (existing) await removeFromWishlist(existing.id);
       } else {
         await addToWishlist(product.id);
@@ -45,6 +53,11 @@ export default function ProductCard({ product }) {
   return (
     <div className="bg-white rounded-2xl border border-motolink-blue-light overflow-hidden flex flex-col hover:shadow-md transition-shadow">
       <div className="relative aspect-square bg-motolink-blue-light">
+        {onSale && (
+          <span className="absolute top-2 left-2 z-10 bg-red-600 text-white text-[11px] font-display font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+            Sale
+          </span>
+        )}
         {product.imageUrl ? (
           <img
             src={resolveImageUrl(product.imageUrl)}
@@ -65,22 +78,40 @@ export default function ProductCard({ product }) {
         >
           <Heart
             size={18}
-            className={wishlisted ? "fill-motolink-blue text-motolink-blue" : "text-motolink-blue-dark"}
+            className={
+              wishlisted
+                ? "fill-motolink-blue text-motolink-blue"
+                : "text-motolink-blue-dark"
+            }
           />
         </button>
       </div>
 
       <div className="p-4 flex flex-col gap-1 flex-1">
         {product.brand && (
-          <span className="text-xs text-motolink-slate uppercase tracking-wide">{product.brand}</span>
+          <span className="text-xs text-motolink-slate uppercase tracking-wide">
+            {product.brand}
+          </span>
         )}
         <h3 className="font-display font-semibold text-motolink-blue-dark leading-snug">
           {product.name}
         </h3>
-        <p className="font-display font-bold text-motolink-blue mt-auto pt-2">
-          {formatPrice(product.price)}
-        </p>
-
+        <div className="mt-auto pt-2">
+          {onSale ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-display font-bold text-red-600">
+                {formatPrice(product.salePrice)}
+              </span>
+              <span className="text-motolink-slate text-sm line-through">
+                {formatPrice(product.price)}
+              </span>
+            </div>
+          ) : (
+            <p className="font-display font-bold text-motolink-blue">
+              {formatPrice(product.price)}
+            </p>
+          )}
+        </div>
         <button
           onClick={handleAddToCart}
           disabled={cartBusy || product.stockQuantity === 0}

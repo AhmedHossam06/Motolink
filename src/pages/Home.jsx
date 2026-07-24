@@ -4,10 +4,6 @@ import {
   Bike,
   ShieldCheck,
   Wrench,
-  Disc,
-  Shield,
-  Zap,
-  CircleDot,
   Package,
   ShoppingCart,
   Gauge,
@@ -20,20 +16,28 @@ import {
 } from "lucide-react";
 import heroVideo from "../assets/Home_page_video.mp4";
 import heroPoster from "../assets/hero.png";
+import helmetHeadsets from "../assets/helmet-headsets.png";
+import motorcycleNavigator from "../assets/motorcycle-navigator.png";
+import mobileHolders from "../assets/mobile-holders.png";
+import cruiseControl from "../assets/cruise-control.png";
+import wirelessControllers from "../assets/wireless-controllers.png";
+import tirePressureMonitoring from "../assets/tire-pressure-monitoring.png";
 import * as api from "../api";
 import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 
-// Maps the "icon" string returned by the backend to an actual lucide-react icon.
-// Falls back to a generic package icon for any name we don't recognize yet.
-const CATEGORY_ICONS = {
-  disc: Disc,
-  shield: Shield,
-  wrench: Wrench,
-  zap: Zap,
-  dot: CircleDot,
+// Maps a category's slug to its bundled image.
+// Falls back to null so the card renders the generic Package icon
+// if a slug isn't recognized yet.
+const CATEGORY_IMAGES = {
+  "helmet-headsets": helmetHeadsets,
+  "motorcycle-navigator": motorcycleNavigator,
+  "mobile-holders": mobileHolders,
+  "cruise-control": cruiseControl,
+  "wireless-controllers": wirelessControllers,
+  "tire-pressure-monitoring": tirePressureMonitoring,
 };
 
 const RIDE_SMARTER_TIPS = [
@@ -59,7 +63,12 @@ const SLIDE_SIZE = 4;
 function ProductCard({ product, onQuickAdd, busy }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { items: wishlistItems, isWishlisted, addToWishlist, removeFromWishlist } = useWishlist();
+  const {
+    items: wishlistItems,
+    isWishlisted,
+    addToWishlist,
+    removeFromWishlist,
+  } = useWishlist();
   const [wishBusy, setWishBusy] = useState(false);
 
   const onSale = product.onSale && product.salePrice != null;
@@ -77,7 +86,9 @@ function ProductCard({ product, onQuickAdd, busy }) {
     setWishBusy(true);
     try {
       if (wishlisted) {
-        const existing = wishlistItems.find((item) => item.product.id === product.id);
+        const existing = wishlistItems.find(
+          (item) => item.product.id === product.id,
+        );
         if (existing) await removeFromWishlist(existing.id);
       } else {
         await addToWishlist(product.id);
@@ -103,11 +114,18 @@ function ProductCard({ product, onQuickAdd, busy }) {
       >
         <Heart
           size={16}
-          className={wishlisted ? "fill-motolink-blue text-motolink-blue" : "text-motolink-slate"}
+          className={
+            wishlisted
+              ? "fill-motolink-blue text-motolink-blue"
+              : "text-motolink-slate"
+          }
         />
       </button>
 
-      <Link to={`/product/${product.id}`} className="block aspect-square bg-motolink-blue-light/40">
+      <Link
+        to={`/product/${product.id}`}
+        className="block aspect-square bg-motolink-blue-light/40"
+      >
         {product.imageUrl && (
           <img
             src={resolveImageUrl(product.imageUrl)}
@@ -216,7 +234,9 @@ function FeaturedGearSlider({ products, onQuickAdd, busyProductId }) {
                 onClick={() => setSlide(i)}
                 aria-label={`Go to slide ${i + 1}`}
                 className={`h-2 rounded-full transition-all cursor-pointer ${
-                  i === slide ? "w-5 bg-motolink-blue" : "w-2 bg-motolink-blue-light"
+                  i === slide
+                    ? "w-5 bg-motolink-blue"
+                    : "w-2 bg-motolink-blue-light"
                 }`}
               />
             ))}
@@ -265,10 +285,14 @@ export default function Home() {
 
   // Real brands pulled from the products themselves, not hardcoded
   // (kept in case the Top Brands section below gets re-enabled)
-  const brands = [...new Set(allProducts.map((p) => p.brand).filter(Boolean))].slice(0, 6);
+  const brands = [
+    ...new Set(allProducts.map((p) => p.brand).filter(Boolean)),
+  ].slice(0, 6);
 
   const scrollToCategories = () => {
-    document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("categories")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleQuickAdd = async (productId) => {
@@ -323,25 +347,38 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section id="categories" className="max-w-7xl mx-auto px-6 py-12 scroll-mt-20">
+      <section
+        id="categories"
+        className="max-w-7xl mx-auto px-6 py-12 scroll-mt-20"
+      >
         <h2 className="font-display font-bold text-2xl text-motolink-blue-dark mb-6">
           Shop by category
         </h2>
 
         {!categories || categories.length === 0 ? (
-          <p className="text-motolink-slate text-sm">Categories will show up here once available.</p>
+          <p className="text-motolink-slate text-sm">
+            Categories will show up here once available.
+          </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {categories.map((category) => {
-              const Icon = CATEGORY_ICONS[category.icon] || Package;
+              const image = CATEGORY_IMAGES[category.slug];
               return (
                 <Link
                   key={category.id}
                   to={`/category/${category.id}`}
                   className="cursor-pointer flex flex-col items-center gap-2 bg-white border border-motolink-blue-light rounded-xl p-5 hover:border-motolink-blue hover:shadow-sm transition-all text-center"
                 >
-                  <div className="p-3 rounded-full bg-motolink-blue-light">
-                    <Icon className="text-motolink-blue" size={22} />
+                  <div className="p-3 rounded-full bg-motolink-blue-light w-16 h-16 flex items-center justify-center">
+                    {image ? (
+                      <img
+                        src={image}
+                        alt={category.name}
+                        className="w-8 h-8 object-contain"
+                      />
+                    ) : (
+                      <Package className="text-motolink-blue" size={22} />
+                    )}
                   </div>
                   <span className="font-display font-semibold text-sm text-motolink-blue-dark">
                     {category.name}
@@ -368,9 +405,13 @@ export default function Home() {
         </div>
 
         {productsLoading ? (
-          <p className="text-motolink-slate text-sm">Loading featured products…</p>
+          <p className="text-motolink-slate text-sm">
+            Loading featured products…
+          </p>
         ) : featuredPool.length === 0 ? (
-          <p className="text-motolink-slate text-sm">Featured products will show up here soon.</p>
+          <p className="text-motolink-slate text-sm">
+            Featured products will show up here soon.
+          </p>
         ) : (
           <FeaturedGearSlider
             products={featuredPool}
@@ -430,9 +471,21 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { icon: Bike, title: "Genuine parts", text: "Sourced and checked for your exact model." },
-            { icon: Wrench, title: "Trusted service", text: "Book verified mechanics near you." },
-            { icon: ShieldCheck, title: "Secure checkout", text: "Your orders and data, protected end to end." },
+            {
+              icon: Bike,
+              title: "Genuine parts",
+              text: "Sourced and checked for your exact model.",
+            },
+            {
+              icon: Wrench,
+              title: "Trusted service",
+              text: "Book verified mechanics near you.",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Secure checkout",
+              text: "Your orders and data, protected end to end.",
+            },
           ].map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex flex-col items-start gap-3">
               <div className="p-3 rounded-xl bg-motolink-blue-light">
